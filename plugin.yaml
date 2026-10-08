@@ -1,0 +1,14 @@
+name: nightshift
+version: 0.1.0
+description: Record every Bot Screen while your Hermes Bots work, then get one tiled time-lapse (each Bot's desktop, labelled with its name and cursor style) and an honest report of what got done, what got blocked, and how often a human had to take over. Linux Bot Screens only; uses ffmpeg x11grab.
+author: Bikash Joshi
+license: MIT
+homepage: https://github.com/BkashJEE/hermes-nightshift
+tags: [bot-screen, computer-use, recording, time-lapse, autonomy, report, bots]
+kind: standalone
+requires_hermes: ">=0.21"
+provides_tools:
+  - nightshift_start
+  - nightshift_stop
+  - nightshift_status
+  - nightshift_report
