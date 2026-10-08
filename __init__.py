@@ -27,9 +27,15 @@ def _report(ns: NightShift, run: str | None) -> dict:
             "markdown": report.read_text(encoding="utf-8") if report.exists() else "(still recording)"}
 
 
+_SETTINGS = ("wall_port",)
+
+
 def register(ctx):
     def ns():
         return NightShift(_data_dir(ctx))
+
+    def settings():
+        return {k: ctx.get_config(k, default=None) for k in _SETTINGS}
 
     def tool(fn):
         def handler(args, **_kw):
@@ -48,11 +54,14 @@ def register(ctx):
         ("nightshift_status", schemas.NIGHTSHIFT_STATUS, lambda n, a: n.status(), "📡", "Recording state and screens"),
         ("nightshift_report", schemas.NIGHTSHIFT_REPORT, lambda n, a: _report(n, a.get("run")), "📊",
          "Report of a finished shift"),
+        ("nightshift_wall", schemas.NIGHTSHIFT_WALL,
+         lambda n, a: n.wall(a.get("action") or "open", a.get("port") or settings().get("wall_port") or 8793), "🖥️",
+         "Every Bot Screen live on one page"),
     ):
         ctx.register_tool(name=name, toolset="nightshift", schema=schema, handler=tool(fn), emoji=emoji, description=blurb)
 
     def _setup(parser):
-        parser.add_argument("action", choices=["start", "stop", "status", "report"])
+        parser.add_argument("action", choices=["start", "stop", "status", "report", "wall", "wall-stop"])
         parser.add_argument("--profiles", nargs="*", help="profiles to record (default: every running screen)")
         parser.add_argument("--fps", type=float, default=2.0)
         parser.add_argument("--speed", type=float, default=20.0, help="time-lapse speed-up on stop")
@@ -63,11 +72,13 @@ def register(ctx):
         n = ns()
         try:
             out = {"start": lambda: n.start(args.profiles, args.fps), "stop": lambda: n.stop(args.speed),
-                   "status": n.status, "report": lambda: _report(n, args.run)}[args.action]()
+                   "status": n.status, "report": lambda: _report(n, args.run),
+                   "wall": lambda: n.wall("open", settings().get("wall_port") or 8793),
+                   "wall-stop": lambda: n.wall("stop")}[args.action]()
         except NightShiftError as e:
             print(f"nightshift: {e}")
             return 1
-        if args.json or args.action in ("start", "status"):
+        if args.json or args.action in ("start", "status", "wall", "wall-stop"):
             print(json.dumps(out, indent=2))
         else:
             print(out.get("markdown") or json.dumps(out, indent=2))

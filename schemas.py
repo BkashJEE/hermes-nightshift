@@ -35,6 +35,19 @@ NIGHTSHIFT_STATUS = {
     "parameters": {"type": "object", "properties": {}},
 }
 
+NIGHTSHIFT_WALL = {
+    "name": "nightshift_wall",
+    "description": (
+        "Open the Bot Wall: one local web page showing every running Bot Screen live, side by side, with each "
+        "Bot's name, cursor style and latest words. Returns the URL (loopback only). Use when the user wants to "
+        "watch the Bots work. 'stop' closes it. Read-only on the Bots: it never sends them anything."
+    ),
+    "parameters": {"type": "object", "properties": {
+        "action": {"type": "string", "enum": ["open", "status", "stop"], "description": "default open"},
+        "port": {"type": "integer", "description": "local port; default 8793"},
+    }},
+}
+
 NIGHTSHIFT_REPORT = {
     "name": "nightshift_report",
     "description": "The report and video path of a finished shift (the latest by default). Read-only.",

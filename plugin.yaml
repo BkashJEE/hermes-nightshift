@@ -12,3 +12,9 @@ provides_tools:
   - nightshift_stop
   - nightshift_status
   - nightshift_report
+  - nightshift_wall
+config_schema:
+  wall_port:
+    type: int
+    default: 8793
+    description: Loopback port for the Bot Wall page.

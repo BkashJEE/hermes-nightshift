@@ -13,6 +13,7 @@ import shlex
 import signal
 import sqlite3
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -189,6 +190,39 @@ class NightShift:
         return {"ok": True, "recording": True, "run": meta["id"], "since_minutes": round((time.time() - meta["started"]) / 60, 1),
                 "bots": {p: {"alive": _alive(v["pid"]), "display": v["display"]} for p, v in meta["bots"].items()},
                 "screens": screens}
+
+    # ---- live wall ---------------------------------------------------------------------------
+    def wall(self, action: str = "open", port: int = 8793) -> dict:
+        """Start, query or stop the Bot Wall page (a separate small process; see wall.py)."""
+        info = None
+        try:
+            info = json.loads((self.data / "wall.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+        alive = bool(info) and _alive(int(info["pid"]))
+        if action == "stop":
+            if alive:
+                os.kill(int(info["pid"]), signal.SIGTERM)
+            (self.data / "wall.json").unlink(missing_ok=True)
+            return {"ok": True, "running": False}
+        if action == "status":
+            return {"ok": True, "running": alive, "url": info["url"] if alive else None}
+        if alive:
+            return {"ok": True, "running": True, "url": info["url"], "already_running": True}
+        self.data.mkdir(parents=True, exist_ok=True)
+        cmd = [sys.executable, str(Path(__file__).resolve().parent / "wall.py"), "--data", str(self.data),
+               "--root", str(self.root), "--port", str(int(port))]
+        self.spawn(cmd, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                   stderr=open(self.data / "wall.log", "ab"))
+        for _ in range(30):
+            try:
+                info = json.loads((self.data / "wall.json").read_text(encoding="utf-8"))
+                break
+            except (OSError, ValueError):
+                time.sleep(0.1)
+        url = (info or {}).get("url") or f"http://127.0.0.1:{int(port)}/"
+        return {"ok": True, "running": True, "url": url,
+                "screens": [b["profile"] for b in bots(self.root) if b["running"]]}
 
     # ---- outputs -----------------------------------------------------------------------------
     def video_command(self, run_dir: Path, meta: dict, speed: float) -> list:

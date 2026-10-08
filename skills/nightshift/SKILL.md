@@ -14,6 +14,16 @@ metadata:
 
 The Bots work on their own desktops (Bot Screens). You record all of them and report honestly.
 
+## Watching them live
+`nightshift_wall` opens one local page with every running Bot Screen side by side (name, cursor style,
+latest words). Give the user the URL. It only watches: it never sends the Bots anything.
+
+## Handing a task to several Bots at once
+Night Shift does not dispatch work; the Bots' own channels do, with their normal approvals:
+- `ask_agent` (Bot Forge) or `message_agent` — one call per Bot, the same instruction each time.
+- Or the user writes it in each Bot's chat.
+Then open the wall and start the shift. Never start unattended runs or bypass approvals yourself.
+
 ## Starting a shift
 1. `nightshift_status` → see which Bots have a screen running. A Bot without one cannot be recorded; tell the
    user to start it (Desktop → Bots → the Bot → Screen → **Start screen**, or
